@@ -1,7 +1,6 @@
-bool test_func() {
-    a = 1;
-    b = 3;
-    if (a != b) {
-        b = a;
-    }
+bool test_2() {
+    f1();
+    if (a != b) int a = 2;
+    f2("dfdfs");
+    f4();
 }

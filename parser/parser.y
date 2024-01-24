@@ -10,14 +10,14 @@
     ASTNode* node;
 }
 
-%token <node> PLUS MINUS TIMES DIVIDE PERCENT EQUAL NOT_EQ
+%token <node> PLUS MINUS TIMES DIVIDE PERCENT ASSIGN EQUAL NOT_EQ
 %token <node> LT GT LTE GTE
 %token <node> AND OR NOT
 %token <node> IDENTIFIER
 %token <node> STR
 %token <node> COMMA
 %token <node> CHAR
-%token <node> BIN HEX INT
+%token <node> BIN HEX DEC
 %token <node> TRUE FALSE
 %token <node> IF ELSE WHILE DO BREAK
 %token <node> SEMICOLON
@@ -88,7 +88,7 @@ typeRef:
     | array     {{$$ = $1;}};
 
 builtin:
-    TYPEDEF {{$$ = $1;}};
+        TYPEDEF {{$$ = $1;}};
 
 statement:
       var           {{$$ =  $1;}}
@@ -97,7 +97,8 @@ statement:
     | while         {{$$ =  $1;}}
     | do            {{$$ =  $1;}}
     | break         {{$$ =  $1;}}
-    | expression    {{$$ =  $1;}};
+    | expression    {{$$ =  $1;}}
+    | call          {{$$ =  $1;}};
 
 custom:
     IDENTIFIER {{$$ = $1;}};
@@ -129,8 +130,10 @@ listStatement:
     | {{$$ = NULL;}};
 
 block:
-      LBRACE listStatement RBRACE   {{$$ = createNode("block", $2, NULL, "");}}
-    | LBRACE RBRACE                 {{$$ = createNode("block", NULL, NULL, "");}};
+      LBRACE listStatement RBRACE SEMICOLON     {{$$ = createNode("block", $2, NULL, "");}}
+    | LBRACE listStatement RBRACE               {{$$ = createNode("block", $2, NULL, "");}}
+    | LBRACE RBRACE SEMICOLON                   {{$$ = createNode("block", NULL, NULL, "");}}
+    | LBRACE RBRACE                             {{$$ = createNode("block", NULL, NULL, "");}};
 
 while:
     WHILE LPAREN expr RPAREN statement {{$$ = createNode("while", $3, $5, "");}};
@@ -162,6 +165,7 @@ binary: assignment
     | expr TIMES        expr {{$$ = createNode("TIMES",         $1, $3, "");}}
     | expr DIVIDE       expr {{$$ = createNode("DIVIDE",        $1, $3, "");}}
     | expr PERCENT      expr {{$$ = createNode("PERCENT",       $1, $3, "");}}
+    | expr ASSIGN       expr {{$$ = createNode("ASSIGN",        $1, $3, "");}}
     | expr EQUAL EQUAL  expr {{$$ = createNode("EQUAL",         $1, $4, "");}}
     | expr NOT_EQ       expr {{$$ = createNode("NOT_EQUAL",     $1, $3, "");}}
     | expr LT           expr {{$$ = createNode("LESS",          $1, $3, "");}}
@@ -180,7 +184,7 @@ braces:
     LPAREN expr RPAREN  {{$$ = createNode("braces", $2, NULL, "");}};
 
 call:
-    IDENTIFIER LPAREN optionalListExpr RPAREN  {{$$ = createNode("CALL", $1, $3, "");}};
+    IDENTIFIER LPAREN optionalListExpr RPAREN {{$$ = createNode("CALL", $1, $3, "");}};
 
 optionalListExpr:
     listExpr    {{$$ = createNode("optionalListExpr", $1, NULL, "");}}
@@ -203,5 +207,5 @@ literal:
     | CHAR  {{$$ = $1;}}
     | HEX   {{$$ = $1;}}
     | BIN   {{$$ = $1;}}
-    | INT   {{$$ = $1;}};
+    | DEC   {{$$ = $1;}};
 %%

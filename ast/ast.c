@@ -5,7 +5,39 @@
 #include "ast.h"
 
 ASTNode **allNodes;
+ASTNodesFile nodesFile[maxNodes];
 u_int64_t allNodesCount;
+int fileCNT;
+
+void freeNodes() {
+    for (int i = 0; i < fileCNT; ++i) {
+        for (int j = 0; j < nodesFile[i].cntNodes; ++j) {
+            free(nodesFile[i].nodes[j]);
+        }
+        free(nodesFile[i].nodes);
+    }
+}
+
+ASTNodesFile initNodesFile() {
+    ASTNodesFile fileNodes;
+    fileNodes.nodes = malloc(1024 * 8 * sizeof(ASTNodesFile *));
+    fileNodes.cntNodes = 0;
+    return fileNodes;
+}
+
+char *NodeAsString(ASTNode *node) {
+    if (node == NULL) {
+        return "NULL";
+    }
+    if (node->value == NULL || strlen(node->value) == 0) {
+        char *leftSide = NodeAsString(node->left);
+        char *rightSide = NodeAsString(node->right);
+        char *result = malloc(strlen(node->type) + strlen(leftSide) + strlen(rightSide) + 5);
+        sprintf(result, "%s(%s, %s)", node->type, leftSide, rightSide);
+        return result;
+    }
+    return node->value;
+}
 
 ASTNode *createNode(char *type, ASTNode *left, ASTNode *right, char *value) {
     ASTNode *node = malloc(sizeof(ASTNode));
@@ -13,77 +45,30 @@ ASTNode *createNode(char *type, ASTNode *left, ASTNode *right, char *value) {
     node->left = left;
     node->right = right;
     char *buf = malloc(1024 * sizeof(char));
-    strcpy(buf, value);
+
+    if (value == NULL || strlen(value) == 0)
+        buf = NodeAsString(node);
+    else {
+        buf = malloc(strlen(value) + 1);
+        strcpy(buf, value);
+    }
+
     node->value = buf;
-    allNodes[allNodesCount] = node;
-    allNodesCount++;
+
+    if (strcmp(node->type, "IDENTIFIER") == 0 ||
+        strcmp(node->type, "LONG") == 0 ||
+        strcmp(node->type, "INTEGER") == 0 ||
+        strcmp(node->type, "ULONG") == 0 ||
+        strcmp(node->type, "UINT") == 0) {
+        node->valueNameCur = buf;
+    } else {
+        node->valueNameCur = NULL;
+    }
+
+//    allNodes[allNodesCount] = node;
+//    allNodesCount++;
+    nodesFile[fileCNT].nodes[nodesFile[fileCNT].cntNodes] = node;
+    nodesFile[fileCNT].cntNodes++;
 
     return node;
-}
-
-char *convertToString(char *type) {
-    char *result = malloc(strlen(type) + 5);
-    if (strcmp(type, "GREATER") == 0) {
-        sprintf(result, "%s [ > ]", type);
-    } else if (strcmp(type, "LESS") == 0) {
-        sprintf(result, "%s [ < ]", type);
-    } else if (strcmp(type, "GREATER_EQ") == 0) {
-        sprintf(result, "%s [ >= ]", type);
-    } else if (strcmp(type, "LESS_EQ") == 0) {
-        sprintf(result, "%s [ <= ]", type);
-    } else if (strcmp(type, "EQUAL") == 0) {
-        sprintf(result, "%s [ == ]", type);
-    } else if (strcmp(type, "NOT_EQUAL") == 0) {
-        sprintf(result, "%s [ != ]", type);
-    } else if (strcmp(type, "PLUS") == 0) {
-        sprintf(result, "%s [ + ]", type);
-    } else if (strcmp(type, "MINUS") == 0) {
-        sprintf(result, "%s [ - ]", type);
-    } else if (strcmp(type, "TIMES") == 0) {
-        sprintf(result, "%s [ * ]", type);
-    } else if (strcmp(type, "DIVIDE") == 0) {
-        sprintf(result, "%s [ / ]", type);
-    } else result = type;
-
-    return result;
-}
-
-void printNodeId(ASTNode *node) {
-    printf("\"ID: %d | Type: %s", node->id, convertToString(node->type));
-
-    if (strlen(node->value) > 0) {
-        printf(", Value: %s", node->value);
-    }
-
-    printf("\"");
-}
-
-void printNode(ASTNode *node) {
-    if (node->left) {
-        printNodeId(node);
-        printf(" -> ");
-        printNodeId(node->left);
-        printf(";\n");
-        printNode(node->left);
-    }
-
-    if (node->right) {
-        printNodeId(node);
-        printf(" -> ");
-        printNodeId(node->right);
-        printf(";\n");
-        printNode(node->right);
-    }
-}
-
-void printAST() {
-    for (int i = 0; i < allNodesCount; ++i) {
-        allNodes[i]->id = i;
-    }
-
-    printf("digraph G {\n");
-    printNode(allNodes[allNodesCount - 1]);
-    printNodeId(allNodes[allNodesCount - 1]);
-    printf(" [shape=Mdiamond];\n");
-    printf("}\n");
 }

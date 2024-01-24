@@ -6,12 +6,12 @@
 
 %%
 [0-9]+ {
-    yylval.node = createNode("INT", NULL, NULL, yytext);
-    return INT;
+    yylval.node = createNode("DEC", NULL, NULL, yytext);
+    return DEC;
 }
 \"[^\"\\]*(?:\\.[^\"\\]*)*\" {
     char buffer[1024];
-    strncpy(buffer, yytext+1, strlen(yytext)-2);
+    strncpy(buffer, yytext+1, strlen(yytext)-1);
     buffer[strlen(buffer)-1] = 0;
     yylval.node = createNode("STR", NULL, NULL, buffer);
     return STR;
