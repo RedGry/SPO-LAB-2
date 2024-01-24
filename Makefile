@@ -5,9 +5,7 @@ LAB_NAME = lab2
 OBJS = ast.o error.o main.o lex.yy.o parser.tab.o painter.o
 OBJS_WITH_PATH = $(patsubst %,$(BUILD_DIR)/%,$(OBJS))
 
-all: clean out build_lab result run
-
-all_lab2: clean out build_lab run3
+all_lab2: clean out build_lab run_test1 run_test2 run_test3 run_test4 run_test5
 
 clean:
 	rm -rf ${BUILD_DIR}
@@ -65,19 +63,23 @@ run: lab2.exe
 run_all: lab2.exe
 	./lab2 tests/test1.txt tests/test2.txt tests/test3.txt tests/test4.txt
 
-run1: lab2.exe
+run_test1: lab2.exe
 	./lab2 tests/test1.txt
 	cat out/test_1.txt | dot -Tsvg > out/test_1.svg
 
-run2: lab2.exe
+run_test2: lab2.exe
 	./lab2 tests/test2.txt
 	cat out/test_2.txt | dot -Tsvg > out/test_2.svg
 
-run3: lab2.exe
+run_test3: lab2.exe
 	./lab2 tests/test3.txt
 	cat out/test_3.txt | dot -Tsvg > out/test_3.svg
 
-run4: lab2.exe
+run_test4: lab2.exe
 	./lab2 tests/test4.txt
 	cat out/test_4.txt | dot -Tsvg > out/test_4.svg
+
+run_test5: lab2.exe
+	./lab2 tests/test5.txt
+	cat out/test_5.txt | dot -Tsvg > out/test_5.svg
 

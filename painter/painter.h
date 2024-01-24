@@ -72,7 +72,9 @@ Block *createBlock(int id, char *call);
 
 BlockList *initBlockList();
 
-void graphConfigBuilderVisit(GraphConfigBuilder *cfgBuilder, ASTNode *node);
+void graphConfigBuilderVisit(GraphConfigBuilder *cfgBuilder, ASTNode *node, int dowhile);
+void graphConfigBuilderVisitEnd(GraphConfigBuilder *cfgBuilder, ASTNode *node);
+void graphConfigBuilderVisitDoWhileEnd(GraphConfigBuilder *cfgBuilder, ASTNode *node);
 
 GraphConfig *createGraphConfig(char *procedureName, Block *entryblock);
 

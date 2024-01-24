@@ -1,6 +1,10 @@
 bool test_2() {
     f1();
-    if (a != b) int a = 2;
-    f2("dfdfs");
+    if (a != b) {
+        f2();
+        f5();
+    }
+    f3("dfdfs");
     f4();
+    f6();
 }

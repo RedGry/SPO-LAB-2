@@ -2,22 +2,29 @@ bool test_4(int arg_1 ) {
     f1();
     do {
         f2();
-        if (a > b)
+        if (a > b){
             f3();
-        else {
+            // f31();
+        } else {
             f4();
             while (x < y) {
                 f5();
                 f6();
-            }
+            };
             f7();
             while (i == j) {
-                f8();
-            }
-            f9();
-        }
-        f10();
-        f11();
+                while (x == y) {
+                    while (m == n) {
+                        f8();
+                    };
+                };
+            };
+            f11();
+        };
+        f12();
+        f13();
+        f14(12);
+        f15();
     } while (j > 3);
-    f12();
+    f16();
 }

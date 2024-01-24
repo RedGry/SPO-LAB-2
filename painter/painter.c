@@ -213,7 +213,6 @@ char *NodeFindIdent(ASTNode *node) {
         return result;
     }
 
-//    printf("type: %s; val: %s\n", node->type, node->value);
     if (strcmp(node->type, "IDENTIFIER") == 0 ||
         strcmp(node->type, "INTEGER") == 0 ||
         strcmp(node->type, "LONG") == 0 ||
@@ -225,32 +224,9 @@ char *NodeFindIdent(ASTNode *node) {
         return result;
     }
 
-    if (strcmp(node->type, "CALL") == 0) {
-        char *leftSide = NodeFindIdent(node->left);
-        char *rightSide = NodeFindIdent(node->right);
-//        char *d = NodeFindIdent(node->right->left);
-//        printf("l: %s; r: %s\n\n", leftSide, rightSide);
-        char *res = concat(leftSide, "(");
-        if (rightSide)
-            res = concat(res, rightSide);
-        return concat(res, ");");
-    }
-
-//    if (strcmp(node->type, "listStatement") == 0) {
-//        char *leftSide = NodeFindIdent(node->left);
-//        char *rightSide = NodeFindIdent(node->right);
-//        printf("l: %s; r: %s\n", leftSide, rightSide);
-//        if (leftSide[0] != '\0') {
-//            char *res = concat(leftSide, "\n");
-//            return concat(res, rightSide);
-//        }
-//    }
-
     if (strcmp(node->type, "listExpr") == 0) {
-//        printf("listExpr\n");
         char *leftSide = NodeFindIdent(node->left);
         char *rightSide = NodeFindIdent(node->right);
-//        printf("l: %s; r: %s\n", leftSide, rightSide);
         if (rightSide[0] != '\0') {
             char *res = concat(leftSide, ", ");
             return concat(res, rightSide);
@@ -261,11 +237,9 @@ char *NodeFindIdent(ASTNode *node) {
         return node->value;
     };
 
-
     if (strcmp(node->type, "assigment") == 0) {
         char *leftSide = NodeFindIdent(node->left);
         char *rightSide = NodeFindIdent(node->right);
-        printf("l: %s; r: %s\n", leftSide, rightSide);
         if (rightSide[0] != '\0') {
             char *res = concat(leftSide, " = ");
             return concat(res, rightSide);
@@ -273,10 +247,8 @@ char *NodeFindIdent(ASTNode *node) {
     };
 
     if (strcmp(node->type, "var") == 0) {
-        printf("VAR-\n");
         char *leftSide = NodeFindIdent(node->left);
         char *rightSide = NodeFindIdent(node->right);
-        printf("l: %s; r: %s\n", leftSide, rightSide);
         if (rightSide[0] != '\0') {
             char *res = concat(leftSide, " ");
             return concat(res, rightSide);
@@ -286,7 +258,6 @@ char *NodeFindIdent(ASTNode *node) {
     if (strcmp(node->type, "ASSIGN") == 0) {
         char *leftSide = NodeFindIdent(node->left);
         char *rightSide = NodeFindIdent(node->right);
-        printf("l: %s; r: %s\n", leftSide, rightSide);
         char *res = concat(leftSide, "=");
         return concat(res, rightSide);
     }
@@ -315,16 +286,26 @@ char *NodeFindIdent(ASTNode *node) {
         return concat(res, rightSide);
     }
 
+    if (strcmp(node->type, "CALL") == 0) {
+        char *leftSide = NodeFindIdent(node->left);
+        char *rightSide = NodeFindIdent(node->right);
+        char *res = concat(leftSide, "(");
+        if (rightSide)
+            res = concat(res, rightSide);
+        return concat(res, ");");
+    }
+
+    if (strcmp(node->type, "block") == 0) {
+        return NULL;
+    }
+
     char *leftSide = NodeFindIdent(node->left);
     char *rightSide = NodeFindIdent(node->right);
-//    printf("%s | %s\n", node->type, concat(leftSide, rightSide));
     return concat(leftSide, rightSide);
 }
 
 char *NodeFindIdentByFirstBlock(ASTNode *node) {
-    if (node != NULL) {
-//        printf("type: %s; val: %s\n", node->type, node->valueNameCur);
-    }
+    if (node != NULL) {}
     if (node == NULL) {
         return "";
     }
@@ -348,14 +329,11 @@ char *NodeFindIdentByFirstBlock(ASTNode *node) {
         }
 
         if (strcmp(node->type, "listStatement") == 0) {
-            printf(NodeFindIdentByFirstBlock(node->left));
             char *leftSide = NodeFindIdentByFirstBlock(node->left);
-            printf("ll: %s\n", leftSide);
             if (strcmp(leftSide, "stop") == 0) {
                 return "";
             }
             char *rightSide = NodeFindIdentByFirstBlock(node->right);
-            printf("rr: %s\n", rightSide);
             if (strcmp(rightSide, "stop") == 0) {
                 return "";
             }
@@ -398,7 +376,6 @@ char *NodeFindIdentByFirstBlock(ASTNode *node) {
         if (strcmp(node->type, "CALL") == 0) {
             char *leftSide = NodeFindIdentByFirstBlock(node->left);
             char *rightSide = NodeFindIdentByFirstBlock(node->right);
-            //printf("l: %s; r: %s\n", leftSide, rightSide);
             char *res = concat(leftSide, "(");
             res = concat(res, rightSide);
             return concat(res, ")");
@@ -417,9 +394,6 @@ void ifBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
     ifBlock->circleInfo = NodeFindIdent(blockIfBody);
 
     ASTNode *elseNode = node->right->right;
-
-    printf("%s\n", conditionBodyToString(ifBodyNode));
-
     exitBlock(cfgBuilder->current_block, ifBlock, concat("IF", conditionBodyToString(ifBodyNode)));
 
     Block *afterIfBlock = GraphConfigBuilderCreateBlock(cfgBuilder, "");
@@ -428,16 +402,8 @@ void ifBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
         exitBlock(cfgBuilder->current_block, elseBlock, "else");
         cfgBuilder->current_block = elseBlock;
         cfgBuilder->current_block->circleInfo = NodeFindIdentByFirstBlock(elseNode->left->left);
-        graphConfigBuilderVisit(cfgBuilder, elseNode);
+        graphConfigBuilderVisit(cfgBuilder, elseNode, 0);
         if (cfgBuilder->current_block->exits->count == 0) {
-//            Node *skipper = elseNode;
-//            int cnt = 4;
-//            while (skipper->left){
-//                printf("type: %s\n", skipper->left->type);
-//                skipper = skipper->left;
-//                cnt -= 1;
-//            }
-            //cfgBuilder->current_block->circleInfo = NodeFindIdent(elseNode->left->left);
             exitBlock(cfgBuilder->current_block, afterIfBlock, "");
         }
     } else {
@@ -445,7 +411,7 @@ void ifBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
     }
     cfgBuilder->current_block = ifBlock;
     ASTNode *nextBlock = node->right->left;
-    graphConfigBuilderVisit(cfgBuilder, nextBlock);
+    graphConfigBuilderVisit(cfgBuilder, nextBlock, 0);
     if (cfgBuilder->current_block->exits->count == 0) {
         exitBlock(cfgBuilder->current_block, afterIfBlock, "");
     }
@@ -464,7 +430,7 @@ void whileBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
     exitBlock(cfgBuilder->current_block, afterWhile, "");
     cfgBuilder->current_block = whileBlock;
     cfgBuilder->current_block->circleInfo = NodeFindIdent(node->right);
-    graphConfigBuilderVisit(cfgBuilder, node->right);
+    graphConfigBuilderVisit(cfgBuilder, node->right, 0);
     if (cfgBuilder->current_block->exits->count == 0) {
         exitBlock(cfgBuilder->current_block, loop, "");
     }
@@ -484,7 +450,9 @@ void doWhileBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
     cfgBuilder->current_block = whileBlock;
     Block *afterWhile = GraphConfigBuilderCreateBlock(cfgBuilder, "");
     BlockListPush(cfgBuilder->after_loop_block_stack, afterWhile);
-    graphConfigBuilderVisit(cfgBuilder, node->left);
+
+    graphConfigBuilderVisit(cfgBuilder, node->left, 1);
+
     cfgBuilder->current_block->circleInfo = NodeFindIdent(node->left);
     exitBlock(cfgBuilder->current_block, loop, concat("while ", conditionBodyToString(doWhileBodyNode)));
     exitBlock(cfgBuilder->current_block, afterWhile, "");
@@ -494,26 +462,26 @@ void doWhileBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
 }
 
 void callBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
-    Block *callF = GraphConfigBuilderCreateBlock(cfgBuilder, NodeFindIdent(node));
-    printf("CALLBUILDER #%s\n", NodeFindIdent(node));
-//    printf("l: %s | r: %s\n", node->left->value, node->right->value);
-    callF->circleInfo = NodeFindIdent(node);
-
-    Block *afterCallBlock = GraphConfigBuilderCreateBlock(cfgBuilder, "AfterCall");
-    exitBlock(callF, afterCallBlock, NodeFindIdent(node));
-
-//    cfgBuilder->current_block = afterCallBlock;
-
-//    printf("%s\n\n", cfgBuilder->current_block->call);
+    char *callName = NodeFindIdent(node);
+    Block *callF = GraphConfigBuilderCreateBlock(cfgBuilder, callName);
+    exitBlock(callF, callF, "CloseCall");
 
     ASTNode *nextBlock = node->right->left;
-    graphConfigBuilderVisit(cfgBuilder, nextBlock);
+
+    if (!strstr(node->value, "var")) {
+        graphConfigBuilderVisit(cfgBuilder, nextBlock, 0);
+    }
+    Block *afterCallBlock = GraphConfigBuilderCreateBlock(cfgBuilder, "AfterCall");
     if (cfgBuilder->current_block->exits->count == 0) {
         exitBlock(cfgBuilder->current_block, afterCallBlock, "");
     }
     cfgBuilder->current_block = afterCallBlock;
+}
 
-    printf("CALLBUILDER-END\n");
+void callBuilderEnd(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
+    char *callName = NodeFindIdent(node);
+    Block *callF = GraphConfigBuilderCreateBlock(cfgBuilder, callName);
+    exitBlock(callF, callF, "CloseCall");
 }
 
 void breakBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
@@ -525,25 +493,18 @@ void breakBuilder(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
               "break");
 }
 
-void next(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
-    //printf("next with: %s\n", node->type);
+void next(GraphConfigBuilder *cfgBuilder, ASTNode *node, int dowhile) {
     if (node->left) {
-        // printf("\tl: %s | valueNameCur[%s] = value[%s]\n", node->left->type, node->left->valueNameCur, node->left->value);
-        if (node->right != NULL) {
-            //printf("\tr: %s | valueNameCur[%s] = value[%s]\n", node->right->type, node->right->valueNameCur, node->right->value);
-        }
-        graphConfigBuilderVisit(cfgBuilder, node->left);
+        if (node->right != NULL) {}
+        graphConfigBuilderVisit(cfgBuilder, node->left, dowhile);
     }
     if (node->right) {
-        if (node->left != NULL) {
-//            printf("\tl: %s | valueNameCur[%s] = value[%s]\n", node->left->type, node->left->valueNameCur, node->left->value);
-        }
-//        printf("\tr: %s | valueNameCur[%s] = value[%s]\n", node->right->type, node->right->valueNameCur, node->right->value);
-        graphConfigBuilderVisit(cfgBuilder, node->right);
+        if (node->left != NULL) {}
+        graphConfigBuilderVisit(cfgBuilder, node->right, dowhile);
     }
 }
 
-void graphConfigBuilderVisit(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
+void graphConfigBuilderVisit(GraphConfigBuilder *cfgBuilder, ASTNode *node, int dowhile) {
     if (!node) {
         return;
     }
@@ -559,44 +520,83 @@ void graphConfigBuilderVisit(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
     } else if (strcmp(node->type, "break") == 0) {
         breakBuilder(cfgBuilder, node);
         return;
-    }
-//    else if (strcmp(node->type, "var") == 0) {
-//        cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//    }
-    else if (strcmp(node->type, "CALL") == 0 || strcmp(node->type, "var") == 0) {
-        printf("\tBLOCK ID: %s\n", NodeFindIdent(node));
+    } else if (strcmp(node->type, "CALL") == 0 || strcmp(node->type, "var") == 0 || strcmp(node->type, "assigment") == 0) {
         if (cfgBuilder->current_block->circleInfo == NULL) {
             cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//            printf("cfg: %s\n", cfgBuilder->current_block->circleInfo);
         }
         callBuilder(cfgBuilder, node);
         return;
-//        if (cfgBuilder->current_block->circleInfo == NULL) {
-//            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//        } else {
-//            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//        }
-//    } else if () {
-//
-//    }
-//    } else if (strcmp(node->type, "CALL") == 0) {
-//        if (cfgBuilder->current_block->circleInfo == NULL) {
-//            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//        } else {
-//            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
-//        }
-//        printf("\tBLOCK ID: %s\n", cfgBuilder->current_block->circleInfo);
-    }
-    else if (strcmp(node->type, "listStatement") == 0) {
-//        printf("listStatement!!\n");
-//        int i = 0;
+    } else if (strcmp(node->type, "listStatement") == 0) {
+        int i = 0;
         for (ASTNode *stmt = node; stmt != NULL; stmt = stmt->right) {
-//            printf("#%i | %s\n", ++i, stmt->right ? stmt->right->value : "");
-//            printf("\t\t\t%s\n", NodeFindIdent(stmt));
-            graphConfigBuilderVisit(cfgBuilder, stmt->left); // Рекурсивный вызов для левого элемента списка
+            if (stmt->right) {
+                graphConfigBuilderVisit(cfgBuilder, stmt->left, dowhile); // Рекурсивный вызов для левого элемента списка
+            } else {
+                if (dowhile == 1) {
+                    graphConfigBuilderVisitDoWhileEnd(cfgBuilder, stmt->left);
+                } else
+                    graphConfigBuilderVisitEnd(cfgBuilder, stmt->left);
+            }
         }
-    } else {
-        next(cfgBuilder, node);
+    }
+    else {
+        next(cfgBuilder, node, dowhile);
+    }
+}
+
+void graphConfigBuilderVisitEnd(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
+    if (!node) {
+        return;
+    }
+
+    if (strcmp(node->type, "if") == 0) {
+        ifBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "while") == 0) {
+        whileBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "dowhile") == 0) {
+        doWhileBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "break") == 0) {
+        breakBuilder(cfgBuilder, node);
+        return;
+    }
+
+    else if (strcmp(node->type, "CALL") == 0 || strcmp(node->type, "var") == 0 || strcmp(node->type, "assigment") == 0) {
+        if (cfgBuilder->current_block->circleInfo == NULL) {
+            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
+        }
+        callBuilderEnd(cfgBuilder, node);
+        return;
+    }
+}
+
+void graphConfigBuilderVisitDoWhileEnd(GraphConfigBuilder *cfgBuilder, ASTNode *node) {
+    if (!node) {
+        return;
+    }
+
+    if (strcmp(node->type, "if") == 0) {
+        ifBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "while") == 0) {
+        whileBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "dowhile") == 0) {
+        doWhileBuilder(cfgBuilder, node);
+        return;
+    } else if (strcmp(node->type, "break") == 0) {
+        breakBuilder(cfgBuilder, node);
+        return;
+    }
+
+    else if (strcmp(node->type, "CALL") == 0 || strcmp(node->type, "var") == 0 || strcmp(node->type, "assigment") == 0) {
+        if (cfgBuilder->current_block->circleInfo == NULL) {
+            cfgBuilder->current_block->circleInfo = NodeFindIdent(node);
+        }
+        callBuilder(cfgBuilder, node);
+        return;
     }
 }
 
@@ -627,7 +627,7 @@ GraphConfig *GraphConfigBuild(GraphConfigBuilder *cfgBuilder, char *procedureNam
     cfgBuilder->current_id = nextId;
     cfgBuilder->current_block = GraphConfigBuilderCreateBlock(cfgBuilder, "");
     cfgBuilder->cfg = createGraphConfig(procedureName, cfgBuilder->current_block);
-    graphConfigBuilderVisit(cfgBuilder, node);
+    graphConfigBuilderVisit(cfgBuilder, node, 0);
     cfgBuilder->cfg->nextId = cfgBuilder->current_id;
     return cfgBuilder->cfg;
 }

@@ -2,10 +2,13 @@ bool test_1() {
     //f1(777, "erfenfe");
     //f2();
     int a = 0;
+    a = a + 12;
     // f3();
 
     while (a < 3){
-     a = a + 1;
+        a = a + 1;
+        b = b + 2;
+        f16();
     };
 
     if (a == 1) {
